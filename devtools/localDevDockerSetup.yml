@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  # ---------------------------
+  # Dev Impact Postgres DB
+  # ---------------------------
+  dev-impact-postgres-db:
+    container_name: dev-impact-db
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: dev-impact-db
+    ports:
+      - "9233:5432"
+    volumes:
+      - dev-impact-postgres-db:/var/lib/postgresql/data
+
+  # ---------------------------
+  # Dev Impact Processor DB
+  # ---------------------------
+  dev-impact-processor-db:
+    container_name: dev-impact-processor
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: dev-impact-processor
+    ports:
+      - "9234:5432"
+    volumes:
+      - dev-impact-processor-db:/var/lib/postgresql/data
+
+  # ---------------------------
+  # Version Control Data Fetcher Postgres
+  # ---------------------------
+  version-control-data-fetcher:
+    container_name: version-control-data-fetcher
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_USER: version_control_user
+      POSTGRES_PASSWORD: version_control_pass
+      POSTGRES_DB: version_control_db
+    ports:
+      - "9231:5432"
+    volumes:
+      - version-control-db-data:/var/lib/postgresql/data
+
+  # ---------------------------
+  # Kong DB
+  # ---------------------------
+  kong-db:
+    image: postgres:14
+    container_name: kong-db
+    restart: always
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: kong
+      POSTGRES_DB: kong
+    volumes:
+      - kong-db-data:/var/lib/postgresql/data
+    networks:
+      - kong-net
+
+  # ---------------------------
+  # Kong API Gateway
+  # ---------------------------
+  kong:
+    image: kong:3.6
+    container_name: kong
+    restart: always
+    command: >
+      sh -c "kong migrations bootstrap && kong migrations up && kong start"
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-db
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong
+      KONG_PROXY_LISTEN: 0.0.0.0:8000
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001, 0.0.0.0:8444 ssl
+      KONG_ADMIN_GUI_LISTEN: 0.0.0.0:8002, 0.0.0.0:8445 ssl
+      KONG_ADMIN_GUI_URL: http://${GW_HOST:-localhost}:8002
+    depends_on:
+      - kong-db
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+      - "8001:8001"
+      - "8444:8444"
+      - "8002:8002"
+      - "8445:8445"
+    networks:
+      - kong-net
+
+  # ---------------------------
+  # Konga UI
+  # ---------------------------
+  konga:
+    image: pantsel/konga
+    platform: linux/amd64
+    container_name: konga
+    restart: always
+    ports:
+      - "1337:1337"
+    depends_on:
+      - kong
+    networks:
+      - kong-net
+
+# ---------------------------
+# Networks
+# ---------------------------
+networks:
+  kong-net:
+    driver: bridge
+
+# ---------------------------
+# Volumes
+# ---------------------------
+volumes:
+  dev-impact-postgres-db:
+  dev-impact-processor-db:
+  version-control-db-data:
+  kong-db-data:

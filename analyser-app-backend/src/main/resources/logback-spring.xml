@@ -1,0 +1,17 @@
+<configuration>
+    <property name="SERVICE_NAME" value="application-backend"/>
+
+    <appender name="JSON-FILE" class="ch.qos.logback.core.FileAppender">
+        <file>logs/app2.log</file>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <provider class="net.logstash.logback.composite.loggingevent.LoggingEventFormattedTimestampJsonProvider">
+                <fieldName>timestamp</fieldName>
+                <pattern>yyyy-MM-dd HH:mm:ss.SSS</pattern>
+            </provider>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="JSON-FILE"/>
+    </root>
+</configuration>

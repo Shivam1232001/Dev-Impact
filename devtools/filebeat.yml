@@ -1,0 +1,112 @@
+filebeat.inputs:
+
+  - type: filestream
+
+    id: version-control-data-fetcher
+
+    paths:
+
+      - /logs/version/*.log
+
+    fields:
+
+      service.name: version-control-data-fetcher
+
+    fields_under_root: true
+
+  - type: filestream
+
+    id: analyser-app-backend
+
+    paths:
+
+      - /logs/application/*.log
+
+    fields:
+
+      service.name: analyser-app-backend
+
+    fields_under_root: true
+
+  - type: filestream
+
+    id: email-backend
+
+    paths:
+
+      - /logs/notification/*.log
+
+    fields:
+
+      service.name: email-backend
+
+    fields_under_root: true
+
+  - type: filestream
+
+    id: code-contribution-analyser
+
+    paths:
+
+      - /logs/django/*.log
+
+    fields:
+
+      service.name: code-contribution-analyser
+
+    fields_under_root: true
+
+
+##############################
+
+# IMPORTANT DATA STREAM MODE
+
+##############################
+
+output.elasticsearch:
+
+  hosts: ["http://elasticsearch:9200"]
+
+  index: "filebeat"
+
+  indices:
+
+    - index: "filebeat"
+
+
+#################################
+
+# MANDATORY FOR DATA STREAM
+
+#################################
+
+setup.template.enabled: true
+
+setup.template.name: "filebeat"
+
+setup.template.pattern: "filebeat"
+
+setup.template.type: "index"
+
+# ENABLE ILM
+
+setup.ilm.enabled: true
+
+setup.ilm.rollover_alias: "filebeat"
+
+setup.ilm.pattern: "{now/d}-000001"
+
+setup.ilm.policy_name: "filebeat"
+
+##############################
+
+# CONNECT KIBANA FOR TEMPLATE
+
+##############################
+
+setup.kibana:
+
+  host: "http://kibana:5601"
+
+logging.level: info
+

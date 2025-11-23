@@ -1,0 +1,263 @@
+openapi: 3.0.1
+info:
+  title: VC Data Fetcher API
+  description: |
+    REST API documentation for GitHub OAuth and Repository Data endpoints.  
+    For GraphQL schema explorer, visit: [GraphiQL UI](http://localhost:8081/graphiql)
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/v1.0.0
+    description: Local server
+
+tags:
+  - name: GitHub Authentication
+    description: Handles GitHub OAuth and token management
+  - name: Repository Data
+    description: Endpoints to validate access and fetch contributors
+
+paths:
+
+  ##############################################
+  # GITHUB AUTHENTICATION – UPDATED ENDPOINTS
+  ##############################################
+
+  /auth/github-login:
+    get:
+      tags: [GitHub Authentication]
+      summary: Get GitHub Login URL
+      description: Generates the GitHub OAuth login URL for a given user ID.
+      parameters:
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+            example: 6
+      responses:
+        "200":
+          description: Successfully generated GitHub login URL
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: https://github.com/login/oauth/authorize?client_id=xxxx&scope=repo,user
+
+  /auth/callback:
+    get:
+      tags: [GitHub Authentication]
+      summary: Handle GitHub OAuth Callback
+      description: Processes GitHub OAuth callback & redirects user to frontend.
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+            example: abcd123
+        - name: state
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "6"
+      responses:
+        "302":
+          description: Redirects user to frontend after processing callback
+
+  /auth/exchange-token:
+    get:
+      tags: [GitHub Authentication]
+      summary: Exchange GitHub Code for Access Token
+      description: Exchanges OAuth "code" for a permanent access token and stores it.
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+            example: abcd123
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+            example: 6
+      responses:
+        "200":
+          description: Token exchanged and stored successfully
+          content:
+            application/json:
+              example:
+                access_token: gho_xxxxxxxxxxxxx
+                message: "Token stored successfully"
+                user_id: 6
+        "500":
+          description: Failed to exchange code for token
+
+  /auth/check-token:
+    get:
+      tags: [GitHub Authentication]
+      summary: Check if Token Exists
+      description: Checks whether a stored GitHub token exists for a user.
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            example: 6
+      responses:
+        "200":
+          description: Valid token found (empty body)
+        "401":
+          description: Token not found or unauthorized (empty body)
+        "500":
+          description: Server error while checking token
+
+  /auth/get-token:
+    get:
+      tags: [GitHub Authentication]
+      summary: Retrieve Stored GitHub Token
+      description: Retrieves the stored GitHub OAuth token & metadata.
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            example: 6
+      responses:
+        "200":
+          description: Token retrieved successfully
+          content:
+            application/json:
+              example:
+                user_id: 6
+                access_token: gho_xxxxxxxx
+                misc_info: "scope:repo,user;token_type:bearer;"
+        "404":
+          description: Token not found for user
+        "500":
+          description: Error retrieving token
+
+  ##############################################
+  # REPOSITORY DATA – UPDATED REST ENDPOINT
+  ##############################################
+
+  /repo-validate:
+    post:
+      tags: [Repository Data]
+      summary: Check Repository Access (REST)
+      description: Validates whether a user has access to the repository.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckAccessRequest"
+      responses:
+        "200":
+          description: Access verified successfully (empty body)
+        "401":
+          description: Unauthorized — user does not have repo access (empty body)
+        "400":
+          description: Invalid repository URL
+        "500":
+          description: Unexpected server error
+
+components:
+
+  schemas:
+
+    VCToken:
+      type: object
+      description: Stored GitHub access token.
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 6
+        access_token:
+          type: string
+          example: gho_xxxxxxxxxxxxxx
+        misc_info:
+          type: string
+          example: "scope:repo,user;token_type:bearer;"
+
+    CheckAccessRequest:
+      type: object
+      description: Payload for repository access validation.
+      properties:
+        repoUrl:
+          type: string
+          example: https://github.com/octocat/Hello-World
+        userId:
+          type: integer
+          example: 6
+
+    Contributor:
+      type: object
+      properties:
+        authorName:
+          type: string
+        githubUrl:
+          type: string
+        contributions:
+          type: integer
+
+    FileData:
+      type: object
+      properties:
+        fileName:
+          type: string
+        fullPath:
+          type: string
+        extension:
+          type: string
+        operation:
+          type: string
+        code:
+          type: string
+        additions:
+          type: integer
+        deletions:
+          type: integer
+        changes:
+          type: integer
+        binaryFile:
+          type: boolean
+        previousFilename:
+          type: string
+
+    Commit:
+      type: object
+      properties:
+        msg:
+          type: string
+        sha:
+          type: string
+        date:
+          type: string
+        files:
+          type: array
+          items:
+            $ref: "#/components/schemas/FileData"
+
+    ContributorWithCommits:
+      type: object
+      properties:
+        authorName:
+          type: string
+        githubUrl:
+          type: string
+        contributions:
+          type: integer
+        commits:
+          type: array
+          items:
+            $ref: "#/components/schemas/Commit"

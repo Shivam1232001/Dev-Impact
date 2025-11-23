@@ -1,0 +1,19 @@
+meta {
+  name: Start Analysis
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl1}}/analyze/repo?repoUrl=https://github.com/user/repo
+  body: none
+  auth: bearer
+}
+
+params:query {
+  repoUrl: https://github.com/user/repo
+}
+
+auth:bearer {
+  token: {{authToken}}
+}

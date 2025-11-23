@@ -1,0 +1,120 @@
+openapi: 3.0.1
+info:
+  title: Email Service API
+  version: 1.0.0
+  description: >
+    API documentation for Email Service that sends emails with optional attachments
+    and retrieves stored email records.
+
+servers:
+  - url: http://localhost:8082/api/v1.0.0
+    description: Local Development Server
+
+paths:
+  /emails/health:
+    get:
+      summary: Health Check
+      description: Returns a simple health message to confirm the service is running.
+      responses:
+        "200":
+          description: Service health status
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Email Service is running"
+
+  /emails:
+    get:
+      summary: Get all sent emails
+      description: Retrieve the list of all emails stored in the database.
+      responses:
+        "200":
+          description: List of emails
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EmailEntity"
+
+    post:
+      summary: Send an email with optional attachment
+      description: >
+        Sends an email using SMTP configuration. Accepts multipart/form-data request
+        including text fields and optional file upload for attachment.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                fromAddress:
+                  type: string
+                  example: "sender@example.com"
+                toAddress:
+                  type: array
+                  items:
+                    type: string
+                    example: "receiver@example.com"
+                subject:
+                  type: string
+                  example: "Test Email"
+                body:
+                  type: string
+                  example: "This is a test email body."
+                attachment:
+                  type: string
+                  format: binary
+              required:
+                - fromAddress
+                - toAddress
+                - subject
+                - body
+      responses:
+        "200":
+          description: Email sent successfully
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Email sent successfully!"
+        "400":
+          description: Bad request
+        "500":
+          description: Internal server error
+
+components:
+  schemas:
+    EmailEntity:
+      type: object
+      description: Represents an email stored in the system.
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 101
+        fromAddress:
+          type: string
+          example: "sender@example.com"
+        toAddress:
+          type: string
+          example: "recipient@example.com"
+        subject:
+          type: string
+          example: "Project Update"
+        body:
+          type: string
+          example: "Hello team, this is the update for the project..."
+        status:
+          type: string
+          example: "SENT"
+        attachmentName:
+          type: string
+          example: "document.pdf"
+        sentAt:
+          type: string
+          format: date-time
+          example: "2025-01-18T15:30:00"
+

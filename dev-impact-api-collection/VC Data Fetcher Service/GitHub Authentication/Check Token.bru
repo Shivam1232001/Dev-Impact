@@ -1,0 +1,15 @@
+meta {
+  name: Check Token
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl2}}/auth/check-token?user_id={{userId}}
+  body: none
+  auth: none
+}
+
+params:query {
+  user_id: {{userId}}
+}

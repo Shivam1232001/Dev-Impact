@@ -1,0 +1,19 @@
+##running Postgres and Redis in a Docker
+version: '3.8'
+services:
+  dev-impact-processor-db:
+    container_name: dev-impact-processor
+    image: "postgres:14-alpine"
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=dev-impact-processor
+    expose:
+      - 9234
+    ports:
+      - 9234:5432
+    volumes:
+      - dev-impact-processor-db:/var/lib/postgresql/data
+
+volumes:
+  dev-impact-processor-db:

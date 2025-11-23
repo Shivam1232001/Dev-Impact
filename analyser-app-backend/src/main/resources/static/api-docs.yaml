@@ -1,0 +1,260 @@
+openapi: 3.0.3
+info:
+  title: Dev Impact API
+  description: API documentation for authentication, GitHub integration, and code analysis services.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/api/v1.0.0
+    description: Local Development Server
+
+paths:
+
+  #################################
+  # AUTHENTICATION
+  #################################
+
+  /auth/register:
+    post:
+      summary: Register a new user
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: Successfully registered user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationResponseDTO'
+
+  /auth/login:
+    post:
+      summary: Authenticate an existing user
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: Successfully authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationResponseDTO'
+
+  /auth/github/oauth:
+    get:
+      summary: Get GitHub OAuth URL for user authorization
+      tags: [Authentication]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Returns the GitHub OAuth URL
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: https://github.com/login/oauth/authorize?client_id=xxxx
+
+  /auth/github/status:
+    get:
+      summary: Check GitHub connection status for the authenticated user
+      tags: [Authentication]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Returns true if GitHub is connected
+          content:
+            application/json:
+              schema:
+                type: boolean
+                example: true
+
+  #################################
+  # CODE ANALYSIS
+  #################################
+
+  /analyze/repo:
+    post:
+      summary: Start code analysis for a given repository
+      tags: [Code Analysis]
+      parameters:
+        - name: repoUrl
+          in: query
+          required: true
+          schema:
+            type: string
+            example: https://github.com/user/repo
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Returns analysis initiation details
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+                example:
+                  analysisId: "1"
+                  message: "Analysis started successfully"
+
+  /analyze/callback/{id}:
+    post:
+      summary: Receive code analysis results callback
+      tags: [Code Analysis]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                qualityScore: 90
+                issuesFound: 3
+      responses:
+        '200':
+          description: Returns whether the callback was processed successfully
+          content:
+            application/json:
+              schema:
+                type: boolean
+                example: true
+
+  /analyze/allProjects:
+    get:
+      summary: Get all code analyses for the authenticated user
+      tags: [Code Analysis]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of all analyses for the authenticated user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CodeAnalysis'
+
+  /analyze/project/{id}:
+    get:
+      summary: Get code analysis for a specific project by ID
+      tags: [Code Analysis]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Returns the code analysis result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeAnalysis'
+
+components:
+
+  schemas:
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        firstName:
+          type: string
+          example: Yash
+        lastName:
+          type: string
+          example: Mishra
+        username:
+          type: string
+          example: yash123
+        password:
+          type: string
+          example: "password123"
+      required: [username, password]
+
+    AuthenticationResponseDTO:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT authentication token
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        message:
+          type: string
+          description: Authentication response message
+          example: Login successful
+        displayName:
+          type: string
+          description: Display name of the user
+          example: "Yash Mishra"
+
+    Token:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 10
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        loggedOut:
+          type: boolean
+          example: false
+        user:
+          $ref: '#/components/schemas/User'
+
+    CodeAnalysis:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user:
+          $ref: '#/components/schemas/User'
+        repoUrl:
+          type: string
+          example: https://github.com/example/repo
+        status:
+          $ref: '#/components/schemas/AnalysisStatus'
+        result:
+          type: string
+          example: "Code quality score: 85%"
+
+    AnalysisStatus:
+      type: string
+      enum: [IN_PROGRESS, COMPLETED, FAILED]
+      example: COMPLETED
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

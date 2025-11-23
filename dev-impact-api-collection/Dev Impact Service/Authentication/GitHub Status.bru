@@ -1,0 +1,15 @@
+meta {
+  name: GitHub Status
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl1}}/auth/github/status
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}

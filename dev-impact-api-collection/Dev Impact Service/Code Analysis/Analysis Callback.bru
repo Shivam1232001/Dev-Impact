@@ -1,0 +1,18 @@
+meta {
+  name: Analysis Callback
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl1}}/analyze/callback/1
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "qualityScore": 90,
+    "issuesFound": 3
+  }
+}

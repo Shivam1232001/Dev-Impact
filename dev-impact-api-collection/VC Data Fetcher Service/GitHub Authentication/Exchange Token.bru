@@ -1,0 +1,16 @@
+meta {
+  name: Exchange Token
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl2}}/auth/exchange-token?code=abcd123&user_id={{userId}}
+  body: none
+  auth: none
+}
+
+params:query {
+  code: abcd123
+  user_id: {{userId}}
+}

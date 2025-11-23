@@ -1,0 +1,18 @@
+meta {
+  name: Validate Repository Access
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl2}}/repo-validate
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "repoUrl": "https://github.com/octocat/Hello-World",
+    "userId": {{userId}}
+  }
+}

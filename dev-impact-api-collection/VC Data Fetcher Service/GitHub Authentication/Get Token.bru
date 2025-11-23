@@ -1,0 +1,15 @@
+meta {
+  name: Get Token
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl2}}/auth/get-token?user_id={{userId}}
+  body: none
+  auth: none
+}
+
+params:query {
+  user_id: {{userId}}
+}

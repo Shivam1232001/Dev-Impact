@@ -1,0 +1,15 @@
+meta {
+  name: Get GitHub Login URL
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl2}}/auth/github-login?user_id={{userId}}
+  body: none
+  auth: none
+}
+
+params:query {
+  user_id: {{userId}}
+}

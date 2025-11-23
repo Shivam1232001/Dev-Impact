@@ -1,0 +1,15 @@
+meta {
+  name: Get Github Data
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:8081/graphql
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

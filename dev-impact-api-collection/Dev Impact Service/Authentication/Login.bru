@@ -1,0 +1,50 @@
+meta {
+  name: Login
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl1}}/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "username": "yash123",
+    "password": "password123"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const response = res.getBody();
+    
+    // Set the auth token
+    if (response.token) {
+      bru.setEnvVar("authToken", response.token);
+      console.log("✅ Auth token set successfully");
+    }
+    
+    // Extract user ID from token (JWT decode)
+    if (response.token) {
+      try {
+        const tokenParts = response.token.split('.');
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(atob(tokenParts[1]));
+          if (payload.sub || payload.userId || payload.id) {
+            const userId = payload.sub || payload.userId || payload.id;
+            bru.setEnvVar("userId", userId);
+            console.log("✅ User ID set successfully:", userId);
+          }
+        }
+      } catch (e) {
+        console.log("⚠️ Could not extract user ID from token");
+      }
+    }
+    
+    console.log("Login successful!");
+    console.log("Display Name:", response.displayName);
+  }
+}

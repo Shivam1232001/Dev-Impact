@@ -1,0 +1,16 @@
+meta {
+  name: OAuth Callback
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl2}}/auth/callback?code=abcd123&state={{userId}}
+  body: none
+  auth: none
+}
+
+params:query {
+  code: abcd123
+  state: {{userId}}
+}
